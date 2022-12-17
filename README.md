@@ -22,27 +22,27 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvi
 
 ## 使用说明
 
-- [BasicTest](https://gitee.com/ruetrash/Privacy-Preserving-ML/tree/main/BasicTest)
+- [BasicTest](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/BasicTest)
 
   BasicTest包中包含本项目的所有基础计算协议（整数部分）的测试代码。
 
-- [FixPointTest](https://gitee.com/ruetrash/Privacy-Preserving-ML/tree/main/FixPointTest)
+- [FixPointTest](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/FixPointTest)
 
   FixPointText包中包含本项目的所有基础计算协议（点点数表示小数部分）的测试代码。
 
-- [ModelAndLayers](https://gitee.com/ruetrash/Privacy-Preserving-ML/tree/main/ModelAndLayers)
+- [ModelAndLayers](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/ModelAndLayers)
 
   ModelAndLayers包含本项目中所有机器学习部分的代码。
 
-- [MSB](https://gitee.com/ruetrash/Privacy-Preserving-ML/tree/main/MSB)
+- [MSB](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/MSB)
 
   MSB包含本项目中安全MSB协议的实现代码以及测试代码。
 
-- [ProtocolOnRing](https://gitee.com/ruetrash/Privacy-Preserving-ML/tree/main/ProtocolOnRing)
+- [ProtocolOnRing](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/ProtocolOnRing)
 
   ProtocolOnRing是本项目的核心代码。
 
-- [TCP](https://gitee.com/ruetrash/Privacy-Preserving-ML/tree/main/TCP)
+- [TCP](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/TCP)
 
   TCP是包含本项目信息传输所使用到的代码以及测试代码。
 
