@@ -6,14 +6,12 @@
 import random
 import torch
 import ProtocolOnRing.param as param
-import ProtocolOnRing.triples_fixpoint as tf
+import ProtocolOnRing.triples as tf
 from MSB import utils_vector
 
 
-Ring = param.Ring
-
 BASE = param.BASE
-Q = param.Q
+Ring = param.Ring
 scaled = param.scaled
 LEN_INTEGER = param.LEN_INTEGER
 LEN_DECIMAL = param.LEN_DECIMAL
@@ -21,9 +19,9 @@ INVERSE = param.INVERSE
 KAPPA = param.KAPPA
 PRECISION = LEN_INTEGER + LEN_DECIMAL
 
-assert (Q > BASE ** LEN_INTEGER + LEN_DECIMAL)
-assert ((INVERSE * scaled) % Q == 1)
-assert (Q > BASE ** (2 * (LEN_INTEGER + LEN_DECIMAL) + KAPPA))
+assert (Ring > BASE ** LEN_INTEGER + LEN_DECIMAL)
+assert ((INVERSE * scaled) % Ring == 1)
+assert (Ring > BASE ** (2 * (LEN_INTEGER + LEN_DECIMAL) + KAPPA))
 
 global ptr
 ptr = 0
@@ -57,7 +55,7 @@ class ShareFloat(object):
             return sec_add(self, y_share)
 
     def __neg__(self):
-        neg_value = (-self.value) % Q
+        neg_value = (-self.value) % Ring
         return ShareFloat(value=neg_value, p=self.p, tcp=self.tcp, device=self.device)
 
     def __sub__(self, other):
@@ -118,12 +116,12 @@ class ShareFloat(object):
 
 def encode(t):
     t = (t * scaled)
-    t = torch.floor(t).long() % Q
+    t = torch.floor(t).long() % Ring
     return t
 
 
 def decode(t):
-    t = torch.where(t > Q / 2, t - Q, t)
+    t = torch.where(t > Ring / 2, t - Ring, t)
     t = t / scaled
 
     return t
@@ -131,7 +129,7 @@ def decode(t):
 
 def share_float(t):
     t_0 = torch.randint(0, int(Ring / 2), t.shape, dtype=torch.int64, device=t.device)
-    t_1 = (t - t_0) % Q
+    t_1 = (t - t_0) % Ring
 
     return t_0, t_1
 
@@ -140,7 +138,7 @@ def restore_float(t):
     t.tcp.send_torch_array(t.value)
     other_share = t.tcp.receive_torch_array(t.device)
     other_share = other_share.to(t.device)
-    res = (other_share + t.value) % Q
+    res = (other_share + t.value) % Ring
 
     return res
 
@@ -148,8 +146,8 @@ def restore_float(t):
 def restore_tensor(t):
     t.tcp.send_torch_array(t.value)
     other_share = t.tcp.receive_torch_array(t.device)
-    res = (other_share + t.value) % Q
-    res = torch.where(res > Q / 2, res - Q, res)
+    res = (other_share + t.value) % Ring
+    res = torch.where(res > Ring / 2, res - Ring, res)
 
     return res
 
@@ -186,29 +184,29 @@ def truncate(res):
         mask = mask.to(res.device)
         mask_low = (mask % scaled)
 
-        res.tcp.send_torch_array((res.value + mask) % Q)
+        res.tcp.send_torch_array((res.value + mask) % Ring)
         b_masked_low = res.tcp.receive_torch_array(res.device)
 
-        b_low = (b_masked_low - mask_low) % Q
-        res.value = (res.value - b_low) % Q
-        z = (res.value * INVERSE) % Q
+        b_low = (b_masked_low - mask_low) % Ring
+        res.value = (res.value - b_low) % Ring
+        z = (res.value * INVERSE) % Ring
 
         return ShareFloat(z, res.p, res.tcp, res.device)
 
     if res.p == 1:
         mask_low = res.tcp.receive_torch_array(res.device)
 
-        b_masked = (mask_low + res.value) % Q
+        b_masked = (mask_low + res.value) % Ring
         b_masked_low = b_masked % scaled
         res.tcp.send_torch_array(b_masked_low)
 
-        z = (res.value * INVERSE) % Q
+        z = (res.value * INVERSE) % Ring
 
         return ShareFloat(z, res.p, res.tcp, res.device)
 
 
 def sec_add(x, y) -> ShareFloat:
-    return ShareFloat(value=(x.value + y.value) % Q, p=x.p, tcp=x.tcp, device=x.device)
+    return ShareFloat(value=(x.value + y.value) % Ring, p=x.p, tcp=x.tcp, device=x.device)
 
 
 def sec_mul_float(x, y):
@@ -225,13 +223,13 @@ def sec_mul_float(x, y):
     b = ShareFloat(value=b, p=p, tcp=x.tcp, device=x.device)
     c = ShareFloat(value=c, p=p, tcp=x.tcp, device=x.device)
 
-    e_h = ShareFloat(value=(x.value - a.value) % Q, p=p, tcp=x.tcp, device=x.device)
-    f_h = ShareFloat(value=(y.value - b.value) % Q, p=p, tcp=x.tcp, device=x.device)
+    e_h = ShareFloat(value=(x.value - a.value) % Ring, p=p, tcp=x.tcp, device=x.device)
+    f_h = ShareFloat(value=(y.value - b.value) % Ring, p=p, tcp=x.tcp, device=x.device)
 
     e = restore_float(e_h)
     f = restore_float(f_h)
 
-    res = (p * e * f + e * b.value + a.value * f + c.value) % Q
+    res = (p * e * f + e * b.value + a.value * f + c.value) % Ring
     res = ShareFloat(res, p, x.tcp, x.device)
 
     res = truncate(res)
@@ -247,7 +245,7 @@ def sec_mat_mul(x: ShareFloat, y: ShareFloat):
     # tem_value = x.value @ y.value
     tem_value = torch.ones(x.value.shape) @ torch.ones(y.value.shape)
     m_0 = x.value.shape[-1]
-    c = (c * m_0) % Q
+    c = (c * m_0) % Ring
 
     a_v = torch.ones(x.value.shape, dtype=x.value.dtype, device=x.device) * a
     b_v = torch.ones(y.value.shape, dtype=x.value.dtype, device=x.device) * b
@@ -265,9 +263,9 @@ def sec_mat_mul(x: ShareFloat, y: ShareFloat):
         a_v = a_v.to(torch.float64)
         b_v = b_v.to(torch.float64)
 
-    res1 = torch.matmul(e, f) % Q
-    res2 = torch.matmul(a_v, f) % Q
-    res3 = torch.matmul(e, b_v) % Q
+    res1 = torch.matmul(e, f) % Ring
+    res2 = torch.matmul(a_v, f) % Ring
+    res3 = torch.matmul(e, b_v) % Ring
 
     if x.device == "cuda":
 
@@ -275,7 +273,7 @@ def sec_mat_mul(x: ShareFloat, y: ShareFloat):
         res2 = res2.long()
         res3 = res3.long()
 
-    res = (x.p * res1 + res2 + res3 + c_v) % Q
+    res = (x.p * res1 + res2 + res3 + c_v) % Ring
     res = ShareFloat(value=res, p=x.p, tcp=x.tcp, device=x.device)
 
     res = truncate(res)
@@ -308,11 +306,11 @@ def B2A(arr, p, tcp, device):
     f = restore_tensor(ShareFloat(f_i, p, tcp, device))
 
     if p == 1:
-        ab_i = ((e * b0_para) + (f * a0_para) + c0_para) % Q
+        ab_i = ((e * b0_para) + (f * a0_para) + c0_para) % Ring
     else:
-        ab_i = ((e * f) + (e * b1_para) + (f * a1_para) + c1_para) % Q
+        ab_i = ((e * f) + (e * b1_para) + (f * a1_para) + c1_para) % Ring
 
-    res = (arr_a + arr_b - 2 * ab_i) % Q
+    res = (arr_a + arr_b - 2 * ab_i) % Ring
 
     return res
 
