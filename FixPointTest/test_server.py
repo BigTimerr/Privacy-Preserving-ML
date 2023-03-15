@@ -15,18 +15,18 @@ LEN_INTEGER = param.LEN_INTEGER
 LEN_DECIMAL = param.LEN_DECIMAL
 INVERSE = param.INVERSE
 p = 0
-
+device = param.device
 # 初始化参数
 server = tcp.TCPServer("127.0.0.1", 9999, 4096)
 server.run()
 
-x_0 = server.receive_torch_array()
-y_0 = server.receive_torch_array()
-t_0 = server.receive_torch_array()
+x_0 = server.receive_torch_array(device)
+y_0 = server.receive_torch_array(device)
+t_0 = server.receive_torch_array(device)
 
-x = ShareFloat(x_0, p, server)
-y = ShareFloat(y_0, p, server)
-t = ShareFloat(t_0, p, server)
+x = ShareFloat(x_0, p, server, device)
+y = ShareFloat(y_0, p, server, device)
+t = ShareFloat(t_0, p, server, device)
 
 print("****************************************")
 z = x + y

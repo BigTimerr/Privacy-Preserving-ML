@@ -16,7 +16,7 @@ LEN_INTEGER = param.LEN_INTEGER
 LEN_DECIMAL = param.LEN_DECIMAL
 INVERSE = param.INVERSE
 p = 1
-
+device = param.device
 
 # 初始化参数
 client = tcp.TCPClient("127.0.0.1", 9999, 4096)
@@ -28,7 +28,6 @@ X = torch.randn(size=(size, size))
 Y = torch.randn(size=(size, size))
 T = torch.randn(size=(size, size))
 
-
 print("X", X)
 print("Y", Y)
 # print("T", T)
@@ -37,8 +36,7 @@ print("Y", Y)
 # print("X * Y:", X * Y)
 # print("X * Y * T:", X * Y * T)
 print("X @ Y", torch.matmul(X, Y))
-print("X @ Y @ T", torch.matmul(torch.matmul(X, Y),T))
-
+print("X @ Y @ T", torch.matmul(torch.matmul(X, Y), T))
 
 # print(" ")
 # print(" ")
@@ -54,9 +52,9 @@ client.send_torch_array(x_0)
 client.send_torch_array(y_0)
 client.send_torch_array(t_0)
 
-x = ShareFloat(x_1, p, client)
-y = ShareFloat(y_1, p, client)
-t = ShareFloat(t_1, p, client)
+x = ShareFloat(x_1, p, client, device)
+y = ShareFloat(y_1, p, client, device)
+t = ShareFloat(t_1, p, client, device)
 
 print("****************************************")
 z = x + y
@@ -69,7 +67,6 @@ z = x - y
 z = ssf.decode(ssf.restore_float(z))
 print("x - y", z)
 print("****************************************")
-
 
 print("****************************************")
 z = x * y
@@ -90,7 +87,7 @@ print("损失值", res - np.matmul(X, Y))
 
 z = z @ t
 res = ssf.decode(ssf.restore_float(z))
-temp = res - np.matmul(np.matmul(X, Y),T)
+temp = res - np.matmul(np.matmul(X, Y), T)
 print("损失值", temp.max())
 print("****************************************")
 
