@@ -9,8 +9,7 @@ server.run()
 
 p = 0  # party 0:server
 Ring = param.Ring
-n = param.n
-
+device = param.device
 
 def showData(x: ShareV, y: ShareV, t: ShareV):
     print("/******************************************************/")
@@ -136,9 +135,9 @@ def sec_mat_mul(x: ShareV, y: ShareV):
 
 if __name__ == '__main__':
     # 首先接受所有的参数
-    x_0 = server.receive_torch_array()
-    y_0 = server.receive_torch_array()
-    t_0 = server.receive_torch_array()
+    x_0 = server.receive_torch_array(device)
+    y_0 = server.receive_torch_array(device)
+    t_0 = server.receive_torch_array(device)
 
     # 得到自身的分享份额
     x = ShareV(value=x_0, p=p, tcp=server)

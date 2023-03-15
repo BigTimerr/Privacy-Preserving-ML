@@ -16,7 +16,6 @@ client.run()
 
 Ring = param.Ring
 p = 1  # party 1:client
-n = param.n
 
 
 def showData(X, Y, T, x, y, t):

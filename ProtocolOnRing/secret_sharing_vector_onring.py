@@ -6,7 +6,7 @@ import ProtocolOnRing.triples_queue_list as tqlist
 import torch
 
 Ring = param.Ring
-n = param.n
+
 
 global tp_ptr
 tp_ptr = 0
@@ -16,7 +16,7 @@ s_ptr = 0
 
 
 class ShareV(object):
-    def __init__(self, value, p, tcp):
+    def __init__(self, value, p, tcp, device="cpu"):
         self.value = value
         self.p = p
 
@@ -26,6 +26,7 @@ class ShareV(object):
             self.party = 'client'
 
         self.tcp = tcp
+        self.device = device
 
     def __str__(self):
         return "[{} value:{},\n party:{}]".format(self.__class__.__name__, self.value, self.party)
@@ -159,13 +160,13 @@ def restore_tensor(t: ShareV, party=2):
             t.tcp.send_torch_array(t.value)
             return t.value
         else:
-            other_share = t.tcp.receive_torch_array()
+            other_share = t.tcp.receive_torch_array(t.device)
             res = (other_share + t.value) % Ring
             res = torch.where(res > Ring / 2, res - Ring, res)
             return res
     else:
         t.tcp.send_torch_array(t.value)
-        other_share = t.tcp.receive_torch_array()
+        other_share = t.tcp.receive_torch_array(t.device)
         res = (other_share + t.value) % Ring
         if isinstance(res, torch.Tensor):
             res = torch.where(res > Ring / 2, res - Ring, res)
@@ -250,7 +251,7 @@ def sec_less_eq_MSB(x: ShareV, y: ShareV) -> ShareV:
     z.value = z.value.reshape(1, size)
     z.value = int2bite_arr(z, size)
 
-    cb = utils.get_carry_bit_sonic(z, size)
+    cb = utils.get_carry_bit_sonic(z, size, x.device)
     cb = cb.reshape(1, cb.numel())
 
     res = B2A(cb, x.p, x.tcp)
@@ -269,7 +270,7 @@ def sec_great_eq_MSB(x: ShareV, y: ShareV) -> ShareV:
     z.value = z.value.reshape(1, size)
     z.value = int2bite_arr(z, size)
 
-    cb = utils.get_carry_bit_sonic(z, size)
+    cb = utils.get_carry_bit_sonic(z, size, x.device)
     cb = cb.reshape(1,cb.numel())
 
     res = B2A(cb, x.p, x.tcp)
