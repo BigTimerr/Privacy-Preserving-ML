@@ -18,6 +18,7 @@ class TCPServer(object):
         self.is_connected = False
         self.payload_size = struct.calcsize("L")
         self.data = b''
+        self.party = 0
 
     def run(self):
         print("TCPServer waiting for connection ......")
@@ -41,7 +42,7 @@ class TCPServer(object):
         self.client_socket.sendall(message_size + data)
 
     def send_torch_array(self, array):
-        array = array.detach().numpy()
+        array = array.cpu().detach().numpy()
         self.send_np_array(array)
 
     def receive_msg(self):
@@ -73,9 +74,9 @@ class TCPServer(object):
         frame = pickle.loads(frame_data)
         return frame
 
-    def receive_torch_array(self):
+    def receive_torch_array(self, device):
         frame = self.receive_np_array()
-        frame = torch.from_numpy(frame)
+        frame = torch.from_numpy(frame).to(device)
         return frame
 
     def close(self):
@@ -94,6 +95,7 @@ class TCPClient(object):
         self.is_connected = False
         self.payload_size = struct.calcsize("L")
         self.data = b''
+        self.party = 1
 
     def run(self):
         self.client_socket.connect(self.address)
@@ -116,7 +118,7 @@ class TCPClient(object):
         self.client_socket.sendall(message_size + data)
 
     def send_torch_array(self, array):
-        array = array.detach().numpy()
+        array = array.cpu().detach().numpy()
         self.send_np_array(array)
 
     def receive_msg(self):
@@ -147,9 +149,9 @@ class TCPClient(object):
         frame = pickle.loads(frame_data)
         return frame
 
-    def receive_torch_array(self):
+    def receive_torch_array(self, device):
         frame = self.receive_np_array()
-        frame = torch.from_numpy(frame)
+        frame = torch.from_numpy(frame).to(device)
         return frame
 
     def close(self):
