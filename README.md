@@ -25,36 +25,33 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvi
 - [BasicTest](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/BasicTest)
 
   BasicTest包中包含本项目的所有基础计算协议（整数部分）的测试代码。
-
 - [FixPointTest](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/FixPointTest)
 
   FixPointText包中包含本项目的所有基础计算协议（点点数表示小数部分）的测试代码。
-
 - [ModelAndLayers](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/ModelAndLayers)
 
   ModelAndLayers包含本项目中所有机器学习部分的代码。
-
 - [MSB](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/MSB)
 
   MSB包含本项目中安全MSB协议的实现代码以及测试代码。
-
 - [ProtocolOnRing](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/ProtocolOnRing)
 
   ProtocolOnRing是本项目的核心代码。
-
 - [TCP](https://github.com/BigTimerr/Privacy-Preserving-ML/tree/main/TCP)
 
   TCP是包含本项目信息传输所使用到的代码以及测试代码。
 
 ## 示例
+
 运行所有测试代码均需要在项目根目录下启动，如下面所展示的示例。
+
+在启动测试之前，需要运行  [triples.py](ProtocolOnRing\triples.py) 和 [msb_triples_vector.py](MSB\msb_triples_vector.py) 文件生成程序所用到的乘法三元组
+
 ```
 # 开启两个终端，分别输入以下代码
 python BasicTest/vector_test_client_onring.py
 python BasicTest/vector_test_server_onring.py
 ```
-
-
 
 ## 维护者
 
@@ -63,4 +60,3 @@ python BasicTest/vector_test_server_onring.py
 ## 使用许可
 
 Privacy-Preserving-ML 基于 GPL3.0 ，如在[LICENSE](https://gitee.com/ruetrash/Privacy-Preserving-ML/blob/main/LICENSE)所述。
-
