@@ -1,33 +1,41 @@
+"""
+# @Time : 2022/10/12 19:45
+# @Author : ruetrash
+# @File : triples_fixpoint.py
+"""
 import numpy as np
 import torch
 import ProtocolOnRing.param as param
+import random
 
 Ring = param.Ring
-data_path = param.data_path
+data_path = "./ProtocolOnRing/triples_data/"
+
+# rd = np.random.RandomState(888)
 
 """
-    运行此文件生成三元组住,需要将下面的注释打开,运行成功
+    运行此文件生成三元组,需要将下面的注释打开,运行成功 (需要在根目录下运行)
     并且生成数据之后,需要将下面代码重新注释掉
-    
 """
 
 
 # ##################################################################################
-# def share_tensor(t):
-#     t_0 = torch.randint(0, int(Ring / 2), size=t.shape, dtype=torch.int64) & 0xffffffff
+#
+# def share_float(t):
+#     t_0 = random.randrange(Ring)
 #     t_1 = (t - t_0) % Ring
 #     return t_0, t_1
 #
 #
 # k = 50000
 #
-# a = torch.randint(0, int(Ring / 2), (k,), dtype=torch.int64) & 0xffffffff
-# b = torch.randint(0, int(Ring / 2), (k,), dtype=torch.int64) & 0xffffffff
+# a = random.randrange(Ring)
+# b = random.randrange(Ring)
 # c = (a * b) % Ring
 #
-# a_0, a_1 = share_tensor(a)
-# b_0, b_1 = share_tensor(b)
-# c_0, c_1 = share_tensor(c)
+# a_0, a_1 = share_float(a)
+# b_0, b_1 = share_float(b)
+# c_0, c_1 = share_float(c)
 #
 # torch.save(a, data_path + "a.pth")
 # torch.save(b, data_path + "b.pth")
@@ -52,26 +60,9 @@ a_1 = torch.load(data_path + "a_1.pth")
 b_1 = torch.load(data_path + "b_1.pth")
 c_1 = torch.load(data_path + "c_1.pth")
 
-# print(a)
-# print(type(a))
-# print((a_0 + a_1) % Ring)
-# print(a_0)
-# print(a_1)
-
 
 def get_triples(p, ptr):
-    # print("triples: a: %d, b: %d ,c :%d" % (a[ptr].item(), b[ptr].item(), c[ptr].item()))
-
     if p == 0:
-        # print("triples: a0: %d, b0: %d ,c0 :%d" % (a_0[ptr].item(), b_0[ptr].item(), c_0[ptr].item()))
-        return (a_0[ptr].item(), b_0[ptr].item(), c_0[ptr].item())
+        return a_0, b_0, c_0
     else:
-        # print("triples: a1: %d, b1: %d ,c1 :%d" % (a_1[ptr].item(), b_1[ptr].item(), c_1[ptr].item()))
-        return (a_1[ptr].item(), b_1[ptr].item(), c_1[ptr].item())
-
-
-def get_mul_triples(p, ptr):
-    if p == 0:
-        return (a[ptr].item(), c_0[ptr].item())
-    else:
-        return (b[ptr].item(), c_1[ptr].item())
+        return a_1, b_1, c_1
