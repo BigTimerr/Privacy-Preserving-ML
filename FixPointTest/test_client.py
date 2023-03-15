@@ -11,10 +11,7 @@ from ProtocolOnRing.secret_sharing_fixpoint import ShareFloat
 import ProtocolOnRing.param as param
 import numpy as np
 
-Q = param.Q
-LEN_INTEGER = param.LEN_INTEGER
-LEN_DECIMAL = param.LEN_DECIMAL
-INVERSE = param.INVERSE
+Ring = param.Ring
 p = 1
 device = param.device
 

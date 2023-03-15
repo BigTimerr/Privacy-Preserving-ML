@@ -8,15 +8,10 @@ import ProtocolOnRing.secret_sharing_fixpoint as ssf
 from ProtocolOnRing.secret_sharing_fixpoint import ShareFloat
 import ProtocolOnRing.param as param
 
-
-
-Q = param.Q
-LEN_INTEGER = param.LEN_INTEGER
-LEN_DECIMAL = param.LEN_DECIMAL
-INVERSE = param.INVERSE
+# 初始化参数
+Ring = param.Ring
 p = 0
 device = param.device
-# 初始化参数
 server = tcp.TCPServer("127.0.0.1", 9999, 4096)
 server.run()
 
