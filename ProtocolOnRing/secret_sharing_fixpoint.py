@@ -258,20 +258,44 @@ def sec_mat_mul(x: ShareFloat, y: ShareFloat):
     f = restore_float(f_h)
 
     if x.device == "cuda":
-        e = e.to(torch.float64)
-        f = f.to(torch.float64)
-        a_v = a_v.to(torch.float64)
-        b_v = b_v.to(torch.float64)
 
-    res1 = torch.matmul(e, f) % Ring
-    res2 = torch.matmul(a_v, f) % Ring
-    res3 = torch.matmul(e, b_v) % Ring
+        tag = 2 ** 24
 
-    if x.device == "cuda":
+        e_high = torch.floor(e / tag).to(torch.float64)
+        e_low = (e - e_high * tag).to(torch.float64)
 
-        res1 = res1.long()
-        res2 = res2.long()
-        res3 = res3.long()
+        f_high = torch.floor(f / tag).to(torch.float64)
+        f_low = (f - f_high * tag).to(torch.float64)
+
+        a_v_high = torch.floor(a_v / tag).to(torch.float64)
+        a_v_low = (a_v - a_v_high * tag).to(torch.float64)
+
+        b_v_high = torch.floor(b_v / tag).to(torch.float64)
+        b_v_low = (b_v - b_v_high * tag).to(torch.float64)
+
+        res1 = (torch.matmul(e_high, f_high) * tag * tag % Ring +
+                torch.matmul(e_high, f_low) * tag % Ring +
+                torch.matmul(e_low, f_high) * tag % Ring +
+                torch.matmul(e_low, f_low)) % Ring
+
+        res2 = (torch.matmul(a_v_high, f_high) * tag * tag % Ring +
+                torch.matmul(a_v_high, f_low) * tag % Ring +
+                torch.matmul(a_v_low, f_high) * tag % Ring +
+                torch.matmul(a_v_low, f_low)) % Ring
+
+        res3 = (torch.matmul(e_high, b_v_high) * tag * tag % Ring +
+                torch.matmul(e_high, b_v_low) * tag % Ring +
+                torch.matmul(e_low, b_v_high) * tag % Ring +
+                torch.matmul(e_low, b_v_low)) % Ring
+
+        res1 = res1.to(torch.int64)
+        res2 = res2.to(torch.int64)
+        res3 = res3.to(torch.int64)
+
+    else:
+        res1 = torch.matmul(e, f) % Ring
+        res2 = torch.matmul(a_v, f) % Ring
+        res3 = torch.matmul(e, b_v) % Ring
 
     res = (x.p * res1 + res2 + res3 + c_v) % Ring
     res = ShareFloat(value=res, p=x.p, tcp=x.tcp, device=x.device)
