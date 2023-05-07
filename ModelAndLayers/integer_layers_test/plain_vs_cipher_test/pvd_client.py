@@ -7,7 +7,7 @@ import torch
 import TCP.tcp as tcp
 import numpy as np
 import ProtocolOnRing.param as param
-import ModelAndLayers.model.modeloflayers as model
+import ModelAndLayers.model.modeloflayers_bak as model
 import ModelAndLayers.layers.layers as layers
 from ProtocolOnRing.secret_sharing_vector_onring import ShareV
 import ProtocolOnRing.secret_sharing_vector_onring as ssv
@@ -24,10 +24,10 @@ Ring = param.Ring
 img_shape = (1, 3, 5, 5)
 kernel_shape = (3, 3, 2, 2)  # 卷积层的kernel 形状
 
-img = np.random.randint(-10, 10, size=img_shape, dtype=np.int32)
+img = torch.randint(-10, 10, size=img_shape, dtype=torch.int64)
 
 # 卷积核为了和在明文上的训练一致，所以直接固定
-kernel_0 = np.array([[[[1, 1], [1, 1]],
+kernel_0 = torch.tensor([[[[1, 1], [1, 1]],
                       [[1, 1], [1, 1]],
                       [[1, 1], [1, 1]]],
 
@@ -37,8 +37,8 @@ kernel_0 = np.array([[[[1, 1], [1, 1]],
 
                      [[[1, 1], [1, 1]],
                       [[1, 1], [1, 1]],
-                      [[1, 1], [1, 1]]]])
-kernel_1 = np.array([[[[2, 3], [4, 5]],
+                      [[1, 1], [1, 1]]]],dtype=torch.int64)
+kernel_1 =  torch.tensor([[[[2, 3], [4, 5]],
                       [[3, 5], [6, 7]],
                       [[5, 8], [3, 6]]],
 
@@ -48,12 +48,12 @@ kernel_1 = np.array([[[[2, 3], [4, 5]],
 
                      [[[6, 7], [5, 2]],
                       [[1, 1], [1, 1]],
-                      [[3, 1], [7, 0]]]])
+                      [[3, 1], [7, 0]]]],dtype=torch.int64)
 print(repr(img))
 # 分享数据
-img_0, img_1 = ssv.share_nparray(img)
-client.send_np_array(img_0)
-client.send_np_array(kernel_0)
+img_0, img_1 = ssv.share_tensor(img)
+client.send_torch_array(img_0)
+client.send_torch_array(kernel_0)
 
 img = ShareV(img_1, p, client)
 
@@ -98,6 +98,6 @@ client_model.add(flatten)
 # 启动 模型
 client_model.set_input(img)
 client_model.predict()
-res = ssv.restore_nparray(client_model.input, party=2)
+res = ssv.restore_tensor(client_model.input, party=2)
 print(res.shape)
 print(res)

@@ -7,7 +7,7 @@ import torch
 import TCP.tcp as tcp
 import numpy as np
 import ProtocolOnRing.param as param
-import ModelAndLayers.model.modeloflayers as model
+import ModelAndLayers.model.modeloflayers_bak as model
 import ModelAndLayers.layers.layers as layers
 from ProtocolOnRing.secret_sharing_vector_onring import ShareV
 import ProtocolOnRing.secret_sharing_vector_onring as ssv
@@ -19,14 +19,15 @@ server.run()
 # 初始化参数
 p = 0  # party 0:server
 Ring = param.Ring
+device = param.device
 
 # 初始化图片信息
 img_shape = (1, 3, 5, 5)
 kernel_shape = (3, 3, 2, 2)  # 卷积层的kernel 形状
 
 # 接受传入的数据
-img_0 = server.receive_np_array()
-kernel_0 = server.receive_np_array()
+img_0 = server.receive_torch_array(device)
+kernel_0 = server.receive_torch_array(device)
 
 img = ShareV(img_0, p, server)
 
@@ -70,5 +71,5 @@ server_model.add(flatten)
 # 启动模型
 server_model.set_input(img)
 server_model.predict()
-res = ssv.restore_nparray(server_model.input, party=2)
+res = ssv.restore_tensor(server_model.input, party=2)
 print(res)
