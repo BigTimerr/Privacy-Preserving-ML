@@ -5,12 +5,12 @@
 """
 import math
 
-import numpy as np
+
 import torch
 
-import protocol_on_ring.secret_sharing_vector_onring as ssv
-import protocol_on_ring.param as param
-from protocol_on_ring.secret_sharing_vector_onring import ShareV
+import ProtocolOnRing.secret_sharing_vector_onring as ssv
+import ProtocolOnRing.param as param
+from ProtocolOnRing.secret_sharing_vector_onring import ShareV
 import torch.nn.functional as F
 
 Ring = param.Ring
@@ -60,15 +60,14 @@ class SecConv2d(Layer):
 
         # 对输入进来的图像进行padding操作
         padding = self.padding
-        x.value = np.pad(x.value, pad_width=((0, 0), (0, 0), (padding, padding), (padding, padding)),
-                         mode='constant', constant_values=0)
+        x.value = F.pad(x.value, (padding, padding, padding, padding), mode="constant", value=0)
 
         # kernel == weight 是由 model中提供的，现在作为演示从文件中获取
         weight = ShareV(self.weight, p, tcp)
         kN, kC, ksize, _ = self.kernel_shape
 
         # 首先处理图片和卷积核的形状问题 ->>>
-        x.value = ssv.img2col(x.value, ksize, self.stride).transpose(0, 2, 1)
+        x.value = ssv.img2col(x.value, ksize, self.stride).transpose(1,2)
         weight.value = weight.value.reshape((kN, kC * ksize * ksize)).T
 
         # 将图片和卷积核送入到函数中进行计算,最后的结果加上bias
@@ -81,7 +80,7 @@ class SecConv2d(Layer):
             bias = ShareV(self.bias, p, tcp)
             output = output + bias
 
-        output.value = output.value.transpose(0, 2, 1).reshape(self.out_shape)
+        output.value = output.value.transpose(1,2).reshape(self.out_shape)
 
         return output
 
@@ -111,7 +110,7 @@ class SecReLu(Layer):
         super().__init__(name)
 
     def forward(self, x: ShareV):
-        temp = ShareV(value=(np.zeros(x.value.shape, dtype=np.int32)), p=x.p, tcp=x.tcp)
+        temp = ShareV(value=(torch.zeros(x.value.shape, dtype=torch.int64)), p=x.p, tcp=x.tcp)
         z = (x > temp) * x
         return z
 
@@ -142,18 +141,11 @@ class SecAvgPool2D(Layer):
 
         # 对图像进行padding处理
         padding = self.padding
-        x.value = np.pad(x.value, pad_width=((0, 0), (0, 0), (padding, padding), (padding, padding)),
-                         mode='constant', constant_values=0)
+        x.value = F.pad(x.value, (padding, padding, padding, padding), mode="constant", value=0)
         #
-        x.value = ssv.img2col(x.value, ksize, stride)
-        zs = []
-        for i in range(0, C):
-            var = x.value[:, i * ksize * ksize:(i + 1) * ksize * ksize, :]
-            out = np.ceil(np.average(var, axis=1)).astype(np.int32)
-            zs.append(out)
-        zs = np.array(zs).reshape(out_shape)
+        z = F.avg_pool2d(x.value, self.kernel_size, self.stride)
+        res = ShareV(value=z.transpose(0, 1), p=x.p, tcp=x.tcp, device=x.device)
 
-        res = ShareV(value=zs, p=x.p, tcp=x.tcp)
         return res
 
     def __call__(self, x: ShareV):
@@ -180,7 +172,7 @@ class SecMaxPool2D(Layer):
                 return z
             if z.shape[1] % 2 == 1:
                 z_ = z[:, -1:, :]
-                z = np.concatenate((z, z_), axis=1)
+                z = torch.cat((z, z_), dim=1)
             z0 = ShareV(value=z[:, 0::2, :], p=p, tcp=tcp)
             z1 = ShareV(value=z[:, 1::2, :], p=p, tcp=tcp)
 
@@ -206,14 +198,13 @@ class SecMaxPool2D(Layer):
 
         # 首先是padding操作
         padding = self.padding
-        x.value = np.pad(x.value, pad_width=((0, 0), (0, 0), (padding, padding), (padding, padding)),
-                         mode='constant', constant_values=0)
+        x.value = F.pad(x.value, (padding, padding, padding, padding), mode="constant", value=0)
 
         x.value = ssv.img2col(x.value, ksize, stride)
         xs = []
         for i in range(0, C):
             xs.append(self.sec_max(x.value[:, i * ksize * ksize:(i + 1) * ksize * ksize, :], x.p, x.tcp))
-        xs = np.array(xs).reshape(out_shape)
+        xs = torch.cat(xs, dim=1).reshape(out_shape).to()
 
         return ShareV(xs, x.p, x.tcp)
 
