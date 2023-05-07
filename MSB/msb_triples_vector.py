@@ -14,7 +14,7 @@ import torch
 
 
 Ring = param.Ring
-data_path = "./MSB/MSB_triples_data/"
+data_path = "MSB/MSB_triples_data/"
 k = 35
 n = 20000000
 
